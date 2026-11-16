@@ -8,6 +8,14 @@
 
 Добавьте tractor_top.c и tractor_pwm.c и заголовки в проект STM32CubeIDE. Полный проект, main.h, HAL и настройки платы не приложены. Пакетный UART, регулировка мощности командами, остановка при потере связи и телеметрия не реализованы.
 
+## Структура
+
+- src/ — исходный код обработки команд, настройки таймера и PWM.
+- tests/ — проверки на компьютере и имитация функций HAL.
+- `README.md` — описание состояния и запуска проверок.
+
+Для настройки настоящей платы дополнительно понадобятся проект CubeMX (.ioc), схема подключения и документация на драйверы моторов. Их нужно добавить в репозиторий, когда они появятся.
+
 ## Проверки на компьютере
 
 В каталоге `tests` находятся две проверки с имитацией HAL. `test_pwm.c` проверяет обработку команд, PWM и концевик; `test_main.c` запускает настоящий `main.c` с подменой аппаратных функций и проверяет настройку каналов, команды и общую остановку. Это не проверка физического сигнала, UART или работы платы.
@@ -16,14 +24,16 @@
 
 ```powershell
 New-Item -ItemType Directory -Force build-test | Out-Null
-gcc -std=c11 -Wall -Wextra -Werror -I tests -I . tractor_top.c tractor_pwm.c tests/test_pwm.c -o build-test/test_pwm.exe
+gcc -std=c11 -Wall -Wextra -Werror -I tests -I src src/tractor_top.c src/tractor_pwm.c tests/test_pwm.c -o build-test/test_pwm.exe
 if ($LASTEXITCODE -ne 0) { throw 'Ошибка сборки test_pwm' }
 ./build-test/test_pwm.exe
 if ($LASTEXITCODE -ne 0) { throw 'Ошибка test_pwm' }
-gcc -std=c11 -Wall -Wextra -Werror -DTEST_FULL_MAIN -Dmain=firmware_main -DTractor_Process=Test_Process -I tests -I . -c main.c -o build-test/main.o
+gcc -std=c11 -Wall -Wextra -Werror -DTEST_FULL_MAIN -Dmain=firmware_main -DTractor_Process=Test_Process -I tests -I src -c src/main.c -o build-test/main.o
 if ($LASTEXITCODE -ne 0) { throw 'Ошибка сборки main.c' }
-gcc -std=c11 -Wall -Wextra -Werror -DTEST_FULL_MAIN -I tests -I . tractor_top.c tractor_pwm.c tests/test_main.c build-test/main.o -o build-test/test_main.exe
+gcc -std=c11 -Wall -Wextra -Werror -DTEST_FULL_MAIN -I tests -I src src/tractor_top.c src/tractor_pwm.c tests/test_main.c build-test/main.o -o build-test/test_main.exe
 if ($LASTEXITCODE -ne 0) { throw 'Ошибка сборки test_main' }
 ./build-test/test_main.exe
 if ($LASTEXITCODE -ne 0) { throw 'Ошибка test_main' }
 ```
+
+
